@@ -133,7 +133,7 @@ plugins:
       <% end %>
 
   <% end %>
-    
+
   <% if p("hm.graphite_enabled") %>
   - name: graphite
     events:
@@ -146,3 +146,16 @@ plugins:
       <% end %>
   <% end %>
 
+  <% if p("hm.consul_enabled") %>
+- name: consul
+  events:
+    - alert
+    - heartbeat
+  options:
+    cluster_address: host: <%= p("hm.consul.cluster_address") %>
+    port: <%= p("hm.consul.port") %>
+    protocol: <%= p("hm.consul.protocol") %>
+    params: <%= p("hm.consul.params") %>
+    endpoint: <%= p("hm.consul.endpoint") %>
+    ttl: <%= p("hm.consul.ttl") %>
+<% end %>
