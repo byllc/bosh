@@ -152,7 +152,7 @@ plugins:
     - alert
     - heartbeat
   options:
-    cluster_address: host: <%= p("hm.consul.cluster_address") %>
+    cluster_address: <%= p("hm.consul.cluster_address") %>
     port: <%= p("hm.consul.port") %>
     protocol: <%= p("hm.consul.protocol") %>
     params: <%= p("hm.consul.params") %>
