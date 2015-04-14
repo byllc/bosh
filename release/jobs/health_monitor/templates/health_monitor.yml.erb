@@ -153,9 +153,16 @@ plugins:
     - heartbeat
   options:
     cluster_address: <%= p("hm.consul.cluster_address") %>
+    <% if_p("hm.consul.port") do |port| %>
     port: <%= p("hm.consul.port") %>
+    <%end%>
+    <% if_p("hm.consul.protocol") do |protocol| %>
     protocol: <%= p("hm.consul.protocol") %>
+    <%end%>
+    <% if_p("hm.consul.params") do |params| %>
     params: <%= p("hm.consul.params") %>
-    endpoint: <%= p("hm.consul.endpoint") %>
+    <%end%>
+    <% if_p("hm.consul.ttl") do |ttl| %>
     ttl: <%= p("hm.consul.ttl") %>
+    <%end%>
 <% end %>
