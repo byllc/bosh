@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Bhm::Plugins::Consul do
+describe Bhm::Plugins::ConsulEventForwarder do
 
   subject{ described_class.new(options)  }
   let(:heartbeat){ make_heartbeat(timestamp: 1320196099) }

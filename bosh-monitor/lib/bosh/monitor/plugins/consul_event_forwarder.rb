@@ -2,7 +2,7 @@
 # Forwards alert and heartbeat messages as events to a consul cluster
 module Bosh::Monitor
   module Plugins
-    class Consul < Base
+    class ConsulEventForwarder < Base
       include Bosh::Monitor::Plugins::HttpRequestHelper
 
       DEFAULT_ENDPOINT       = '/v1/event/fire/'

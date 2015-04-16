@@ -184,24 +184,24 @@ properties:
     description: Prefix that will be added to all metrics sent to Graphite
 
 #Send Heartbeats and Alerts as events to a Consul cluster
-  hm.consul_enabled:
+  hm.consul_event_forwarder_enabled:
     description: Enable Consul Plugin
     default: false
-  hm.consul.cluster_address:
+  hm.consul_event_forwarder.cluster_address:
     description: Location of Consul Cluster
-  hm.consul.port:
+  hm.consul_event_forwarder.port:
     description: Consul Port
-  hm.consul.protocol:
+  hm.consul_event_forwarder.protocol:
     description: http/https
-  hm.consul.params:
+  hm.consul_event_forwarder.params:
     description: Params for url can be used for passing ACL token
-  hm.consul.events_api:
+  hm.consul_event_forwarder.events_api:
     description: The base path for the consul endpoint
-  hm.consul.namespace:
+  hm.consul_event_forwarder.namespace:
     description: A namespace for handling multiples of the same release
-  hm.consul.ttl:
+  hm.consul_event_forwarder.ttl:
     description: A ttl time for ttl checks, if set ttl checks will be used
-  hm.consul.ttl_note:
+  hm.consul_event_forwarder.ttl_note:
     description: A note for ttl checks
-  hm.consul.events:
+  hm.consul_event_forwarder.events:
     description: Whether or not to use the events api
