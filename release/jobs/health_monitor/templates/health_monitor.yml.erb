@@ -146,7 +146,7 @@ plugins:
       <% end %>
   <% end %>
 
-  <% if p("hm.consul_enabled") %>
+  <% if p("hm.consul_event_forwarder_enabled") %>
 - name: consul_event_forwarder
   events:
     - alert
