@@ -147,22 +147,22 @@ plugins:
   <% end %>
 
   <% if p("hm.consul_event_forwarder_enabled") %>
-- name: consul_event_forwarder
-  events:
-    - alert
-    - heartbeat
-  options:
-    cluster_address: <%= p("hm.consul_event_forwarder.cluster_address") %>
-    <% if_p("hm.consul_event_forwarder.port") do |port| %>
-    port: <%= p("hm.consul_event_forwarder.port") %>
-    <%end%>
-    <% if_p("hm.consul_event_forwarder.protocol") do |protocol| %>
-    protocol: <%= p("hm.consul_event_forwarder.protocol") %>
-    <%end%>
-    <% if_p("hm.consul_event_forwarder.params") do |params| %>
-    params: <%= p("hm.consul_event_forwarder.params") %>
-    <%end%>
-    <% if_p("hm.consul_event_forwarder.ttl") do |ttl| %>
-    ttl: <%= p("hm.consul_event_forwarder.ttl") %>
-    <%end%>
-<% end %>
+  - name: consul_event_forwarder
+    events:
+      - alert
+      - heartbeat
+    options:
+      cluster_address: <%= p("hm.consul_event_forwarder.cluster_address") %>
+      <% if_p("hm.consul_event_forwarder.port") do |port| %>
+      port: <%= p("hm.consul_event_forwarder.port") %>
+      <%end%>
+      <% if_p("hm.consul_event_forwarder.protocol") do |protocol| %>
+      protocol: <%= p("hm.consul_event_forwarder.protocol") %>
+      <%end%>
+      <% if_p("hm.consul_event_forwarder.params") do |params| %>
+      params: <%= p("hm.consul_event_forwarder.params") %>
+      <%end%>
+      <% if_p("hm.consul_event_forwarder.ttl") do |ttl| %>
+      ttl: <%= p("hm.consul_event_forwarder.ttl") %>
+      <%end%>
+  <% end %>
