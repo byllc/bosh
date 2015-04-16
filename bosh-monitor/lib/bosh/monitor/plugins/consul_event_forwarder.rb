@@ -31,7 +31,7 @@ module Bosh::Monitor
       end
 
       def validate_options
-        !@cluster_address.empty?
+        !options['cluster_address'].empty?
       end
 
       def process(event)
