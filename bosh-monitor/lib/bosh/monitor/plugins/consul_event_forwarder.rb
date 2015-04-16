@@ -17,7 +17,7 @@ module Bosh::Monitor
         @checklist       = []
         @cluster_address = options["cluster_address"] || ""
         @namespace       = options['namespace']       || ""
-        @events_api       = options["events_api"]      || DEFAULT_ENDPOINT
+        @events_api      = options["events_api"]      || DEFAULT_ENDPOINT
         @ttl_api         = options["ttl_api"]         || DEFAULT_TTL_ENDPOINT
         @port            = options["port"]            || DEFAULT_PORT
         @protocol        = options["protocal"]        || DEFAULT_PROTOCOL
@@ -31,7 +31,7 @@ module Bosh::Monitor
       end
 
       def validate_options
-        !(@cluster_address.empty? || @port.to_s.empty? || @events_api.empty? )
+        !@cluster_address.empty?
       end
 
       def process(event)
