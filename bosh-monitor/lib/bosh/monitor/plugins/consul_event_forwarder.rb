@@ -1,5 +1,6 @@
 # Consul Bosh Monitor Plugin
 # Forwards alert and heartbeat messages as events to a consul cluster
+#
 module Bosh::Monitor
   module Plugins
     class ConsulEventForwarder < Base
@@ -31,7 +32,7 @@ module Bosh::Monitor
       end
 
       def validate_options
-        !options['cluster_address'].empty?
+        !(options['cluster_address'].nil? || options['cluster_address'].empty?)
       end
 
       def process(event)
@@ -83,7 +84,7 @@ module Bosh::Monitor
       end
 
       # Notify consul of an event
-      # note_type: teh type of notice we are sending (:event, :ttl, :register)
+      # note_type: the type of notice we are sending (:event, :ttl, :register)
       # message:   an optional body for the message, event.json is used by default
       def notify_consul(event, note_type, message=nil)
         body    = message.nil? ? event.to_json : message.to_json

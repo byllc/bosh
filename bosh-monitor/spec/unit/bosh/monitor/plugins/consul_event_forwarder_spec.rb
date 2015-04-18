@@ -60,6 +60,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
         subject.process(heartbeat)
       end
     end
+
   end
 
   describe "sending ttl requests to consul" do
@@ -93,6 +94,19 @@ describe Bhm::Plugins::ConsulEventForwarder do
       subject.process(heartbeat)
     end
 
+    describe "when events are not enabled" do
+      let(:options){ { 'cluster_address' => 'fake-consul-cluster', 'events' => false } } 
+      it "should not forward events" do
+        subject.run
+
+        EM.run do
+          subject.process(heartbeat)
+          EM.stop
+        end
+        expect(subject).to_not receive(:send_http_put_request).with(uri, request)
+        subject.process(heartbeat)
+      end
+    end
 
     describe "when events are also enabled" do
       let(:options){ { 'cluster_address' => 'fake-consul-cluster', 'ttl' => "120s", 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test'} }
