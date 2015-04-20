@@ -35,6 +35,8 @@ module Bosh::Monitor
 
         @status_map = Hash.new(:warn)
         @status_map.merge!(TTL_STATUS_MAP)
+
+        logger.info("Consul Event Forwarder plugin is running...")
       end
 
       def validate_options
@@ -103,14 +105,13 @@ module Bosh::Monitor
         #if a registration request returns without error we log it
         #we don't want to send extra registrations
         @checklist << event.job if note_type == :register
-        true
-      rescue Exception => e
-        logger.info("Could not forward event to Consul Cluster @#{@cluster_address}: #{e.inspect}")
-        false
+      rescue => e
+        logger.error("Could not forward event to Consul Cluster @#{@cluster_address}: #{e.inspect}")
       end
 
       #Has this process not encountered a specific ttl check yet?
       #We keep track so we aren't sending superfluous registrations
+      #Only register ttl for events that have a job assigned
       def event_unregistered?(event)
         @use_ttl && event.respond_to?(:job) && !@checklist.include?(event.job)
       end
