@@ -104,7 +104,7 @@ module Bosh::Monitor
         #we don't want to send extra registrations
         @checklist << event.job if note_type == :register
         true
-      rescue => e
+      rescue Exception => e
         logger.info("Could not forward event to Consul Cluster @#{@cluster_address}: #{e.inspect}")
         false
       end
