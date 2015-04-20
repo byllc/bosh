@@ -16,7 +16,7 @@ The Consul plugin works by forwarding nats heartbeat events and alerts to a cons
 
 | option             | description                         |
 |--------------------|-------------------------------------|
-|  cluster_address   | The address of the cluster or agent |
+|  host              | The address of the cluster or agent |
 |  namespace         | A namespace to separate multiple instances of the same release
 |  events_api        | The events api endpoint defaults to /v1/event/fire/
 |  ttl_api           | The Check update and registration endpoint defaults to /v1/agent/check/

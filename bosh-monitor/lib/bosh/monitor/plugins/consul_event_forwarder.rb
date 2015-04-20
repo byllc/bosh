@@ -22,11 +22,11 @@ module Bosh::Monitor
 
       def run
         @checklist       = []
-        @host = options["host"] || ""
+        @host            = options['host']            || ""
         @namespace       = options['namespace']       || ""
-        @port            = options["port"]            || DEFAULT_PORT
-        @protocol        = options["protocol"]        || DEFAULT_PROTOCOL
-        @params          = options["params"]
+        @port            = options['port']            || DEFAULT_PORT
+        @protocol        = options['protocol']        || DEFAULT_PROTOCOL
+        @params          = options['params']
         @ttl             = options['ttl']
         @use_events      = options['events']          || false
         @ttl_note        = options['ttl_note']        || DEFAULT_TTL_NOTE
