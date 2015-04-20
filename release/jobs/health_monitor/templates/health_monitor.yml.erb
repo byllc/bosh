@@ -165,17 +165,11 @@ plugins:
       <% if_p("hm.consul_event_forwarder.ttl") do |ttl| %>
       ttl: <%= p("hm.consul_event_forwarder.ttl") %>
       <%end%>
-      <% if_p("hm.consul_event_forwarder.ttl_api") do |ttl| %>
-      events: <%= p("hm.consul_event_forwarder.ttl_api") %>
-      <%end%>
       <% if_p("hm.consul_event_forwarder.ttl_note") do |ttl| %>
       events: <%= p("hm.consul_event_forwarder.ttl_note") %>
       <%end%>
       <% if_p("hm.consul_event_forwarder.events") do |ttl| %>
       events: <%= p("hm.consul_event_forwarder.events") %>
-      <%end%>
-      <% if_p("hm.consul_event_forwarder.events_api") do |ttl| %>
-      events: <%= p("hm.consul_event_forwarder.events_api") %>
       <%end%>
       <% if_p("hm.consul_event_forwarder.namespace") do |ttl| %>
       namespace: <%= p("hm.consul_event_forwarder.namespace") %>

@@ -1,34 +1,40 @@
 # Consul Bosh Monitor Plugin
 # Forwards alert and heartbeat messages as events to a consul cluster
-#
 module Bosh::Monitor
   module Plugins
     class ConsulEventForwarder < Base
       include Bosh::Monitor::Plugins::HttpRequestHelper
 
-      DEFAULT_ENDPOINT       = '/v1/event/fire/'
-      DEFAULT_TTL_ENDPOINT   = '/v1/agent/check/'
       DEFAULT_PORT           = '8500'
       DEFAULT_PROTOCOL       = 'http'
-      DEFAULT_TTL_REG_PATH   = "register"
       DEFAULT_TTL_NOTE       = "Automatically Registered by BOSH-MONITOR"
       CONSUL_REQUEST_HEADER  = { 'Content-Type' => 'application/javascript' }
+      TTL_STATUS_MAP         = { 'running' => :pass, 'failing' => :fail, 'unknown' => :fail, 'default' => :warn }
+
+      CONSUL_ENDPOINTS = {
+        event:     "/v1/event/fire/",             #fire and event
+        register:   "/v1/agent/check/register",   #register a check
+        deregister: "/v1/agent/check/deregister/", #deregister a check
+        pass:       "/v1/agent/check/pass/",       #mark a check as passing
+        warn:       "/v1/agent/check/warn/",       #mark a check as warning
+        fail:       "/v1/agent/check/fail/"        #mark a check as failing
+      }
 
       def run
         @checklist       = []
         @cluster_address = options["cluster_address"] || ""
         @namespace       = options['namespace']       || ""
-        @events_api      = options["events_api"]      || DEFAULT_ENDPOINT
-        @ttl_api         = options["ttl_api"]         || DEFAULT_TTL_ENDPOINT
         @port            = options["port"]            || DEFAULT_PORT
-        @protocol        = options["protocal"]        || DEFAULT_PROTOCOL
+        @protocol        = options["protocol"]        || DEFAULT_PROTOCOL
         @params          = options["params"]
         @ttl             = options['ttl']
         @use_events      = options['events']          || false
         @ttl_note        = options['ttl_note']        || DEFAULT_TTL_NOTE
 
-        @ttl_register_path  = @ttl_api + DEFAULT_TTL_REG_PATH
         @use_ttl            = !@ttl.nil?
+
+        @status_map = Hash.new(:warn)
+        @status_map.merge!(TTL_STATUS_MAP)
       end
 
       def validate_options
@@ -59,11 +65,13 @@ module Bosh::Monitor
       def get_path_for_note_type(event, note_type)
         case note_type
         when :event
-          @events_api + label_for_event(event)
+          CONSUL_ENDPOINTS[:event] + label_for_event(event)
         when :ttl
-          @ttl_api + label_for_ttl(event)
+          job_state = event.attributes['job_state']
+          status_id = @status_map[job_state]
+          CONSUL_ENDPOINTS[status_id] + label_for_ttl(event)
         when :register
-          @ttl_register_path
+          CONSUL_ENDPOINTS[:register]
         end
       end
 
@@ -104,7 +112,7 @@ module Bosh::Monitor
       #Has this process not encountered a specific ttl check yet?
       #We keep track so we aren't sending superfluous registrations
       def event_unregistered?(event)
-        @use_ttl && !@checklist.include?(event.job)
+        @use_ttl && event.respond_to?(:job) && !@checklist.include?(event.job)
       end
 
       def registration_payload(event)

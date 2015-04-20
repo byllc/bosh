@@ -195,14 +195,10 @@ properties:
     description: http/https
   hm.consul_event_forwarder.params:
     description: Params for url can be used for passing ACL token
-  hm.consul_event_forwarder.events_api:
-    description: The base path for the consul endpoint
   hm.consul_event_forwarder.namespace:
     description: A namespace for handling multiples of the same release
   hm.consul_event_forwarder.ttl:
     description: A ttl time for ttl checks, if set ttl checks will be used
-  hm.consul_event_forwarder.ttl_api:
-    description: The Consul ttl endpoint 
   hm.consul_event_forwarder.ttl_note:
     description: A note for ttl checks
   hm.consul_event_forwarder.events:
