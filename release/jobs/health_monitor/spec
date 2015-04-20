@@ -187,8 +187,8 @@ properties:
   hm.consul_event_forwarder_enabled:
     description: Enable Consul Plugin
     default: false
-  hm.consul_event_forwarder.cluster_address:
-    description: Location of Consul Cluster
+  hm.consul_event_forwarder.host:
+    description: Location of Consul Cluster or agent
   hm.consul_event_forwarder.port:
     description: Consul Port
   hm.consul_event_forwarder.protocol:

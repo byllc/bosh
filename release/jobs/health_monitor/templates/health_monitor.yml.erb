@@ -152,7 +152,7 @@ plugins:
       - alert
       - heartbeat
     options:
-      cluster_address: <%= p("hm.consul_event_forwarder.cluster_address") %>
+      cluster_address: <%= p("hm.consul_event_forwarder.host") %>
       <% if_p("hm.consul_event_forwarder.port") do |port| %>
       port: <%= p("hm.consul_event_forwarder.port") %>
       <%end%>

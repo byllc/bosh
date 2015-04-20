@@ -22,7 +22,7 @@ module Bosh::Monitor
 
       def run
         @checklist       = []
-        @cluster_address = options["cluster_address"] || ""
+        @host = options["host"] || ""
         @namespace       = options['namespace']       || ""
         @port            = options["port"]            || DEFAULT_PORT
         @protocol        = options["protocol"]        || DEFAULT_PROTOCOL
@@ -40,7 +40,7 @@ module Bosh::Monitor
       end
 
       def validate_options
-        !(options['cluster_address'].nil? || options['cluster_address'].empty?)
+        !(options['host'].nil? || options['host'].empty?)
       end
 
       def process(event)
@@ -51,7 +51,7 @@ module Bosh::Monitor
 
       def consul_uri(event, note_type)
         path = get_path_for_note_type(event, note_type)
-        URI.parse("#{@protocol}://#{@cluster_address}:#{@port}#{path}?#{@params}")
+        URI.parse("#{@protocol}://#{@host}:#{@port}#{path}?#{@params}")
       end
 
       def forward_event(event)
@@ -106,7 +106,7 @@ module Bosh::Monitor
         #we don't want to send extra registrations
         @checklist << event.job if note_type == :register
       rescue => e
-        logger.error("Could not forward event to Consul Cluster @#{@cluster_address}: #{e.inspect}")
+        logger.error("Could not forward event to Consul Cluster @#{@host}: #{e.inspect}")
       end
 
       #Has this process not encountered a specific ttl check yet?
