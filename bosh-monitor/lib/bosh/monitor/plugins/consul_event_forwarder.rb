@@ -1,19 +1,16 @@
 # Consul Bosh Monitor Plugin
-# Forwards alert and heartbeat messages as events to a consul cluster
+# Forwards alert and heartbeat messages as events to a consul agent
 module Bosh::Monitor
   module Plugins
     class ConsulEventForwarder < Base
       include Bosh::Monitor::Plugins::HttpRequestHelper
 
-      DEFAULT_PORT           = '8500'
-      DEFAULT_PROTOCOL       = 'http'
-      DEFAULT_TTL_NOTE       = "Automatically Registered by BOSH-MONITOR"
-      CONSUL_REQUEST_HEADER  = { 'Content-Type' => 'application/javascript' }
+    CONSUL_REQUEST_HEADER  = { 'Content-Type' => 'application/javascript' }
       TTL_STATUS_MAP         = { 'running' => :pass, 'failing' => :fail, 'unknown' => :fail, 'default' => :warn }
 
       CONSUL_ENDPOINTS = {
-        event:     "/v1/event/fire/",             #fire and event
-        register:   "/v1/agent/check/register",   #register a check
+        event:     "/v1/event/fire/",              #fire and event
+        register:   "/v1/agent/check/register",    #register a check
         deregister: "/v1/agent/check/deregister/", #deregister a check
         pass:       "/v1/agent/check/pass/",       #mark a check as passing
         warn:       "/v1/agent/check/warn/",       #mark a check as warning
@@ -24,12 +21,12 @@ module Bosh::Monitor
         @checklist       = []
         @host            = options['host']            || ""
         @namespace       = options['namespace']       || ""
-        @port            = options['port']            || DEFAULT_PORT
-        @protocol        = options['protocol']        || DEFAULT_PROTOCOL
+        @port            = options['port']
+        @protocol        = options['protocol']
         @params          = options['params']
         @ttl             = options['ttl']
-        @use_events      = options['events']          || false
-        @ttl_note        = options['ttl_note']        || DEFAULT_TTL_NOTE
+        @use_events      = options['events']
+        @ttl_note        = options['ttl_note']
 
         @use_ttl            = !@ttl.nil?
 
@@ -62,6 +59,13 @@ module Bosh::Monitor
         elsif @use_ttl
           notify_consul(event, :ttl)
         end
+      end
+
+      #currently an event sent to consul has a maximum payload size of 512 bytes
+      #This poses and interesting problem, How do we slim down an event without damaging the structure
+      #of the well formed json?
+      def fix_body_size(event)
+
       end
 
       def get_path_for_note_type(event, note_type)
