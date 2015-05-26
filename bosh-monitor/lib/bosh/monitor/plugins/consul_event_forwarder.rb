@@ -5,8 +5,9 @@ module Bosh::Monitor
     class ConsulEventForwarder < Base
       include Bosh::Monitor::Plugins::HttpRequestHelper
 
-    CONSUL_REQUEST_HEADER  = { 'Content-Type' => 'application/javascript' }
+      CONSUL_REQUEST_HEADER  = { 'Content-Type' => 'application/javascript' }
       TTL_STATUS_MAP         = { 'running' => :pass, 'failing' => :fail, 'unknown' => :fail, 'default' => :warn }
+      REQUIRED_OPTIONS       = ["host", "port", "protocol" ]
 
       CONSUL_ENDPOINTS = {
         event:     "/v1/event/fire/",              #fire and event
@@ -19,8 +20,8 @@ module Bosh::Monitor
 
       def run
         @checklist       = []
-        @host            = options['host']            || ""
-        @namespace       = options['namespace']       || ""
+        @host            = options['host']
+        @namespace       = options['namespace']
         @port            = options['port']
         @protocol        = options['protocol']
         @params          = options['params']
@@ -37,7 +38,8 @@ module Bosh::Monitor
       end
 
       def validate_options
-        !(options['host'].nil? || options['host'].empty?)
+        valid_array = REQUIRED_OPTIONS.map{ |o| options[o].to_s.empty? }
+        !valid_array.include?(true)
       end
 
       def process(event)
@@ -64,7 +66,7 @@ module Bosh::Monitor
       #currently an event sent to consul has a maximum payload size of 512 bytes
       #This poses and interesting problem, How do we slim down an event without damaging the structure
       #of the well formed json?
-      def fix_body_size(event)
+      def fix_body_size(body)
 
       end
 

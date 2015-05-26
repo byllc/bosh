@@ -26,7 +26,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
 
   describe "validating the options" do
     context "when we specify host, endpoint and port" do
-      let(:options){ { 'host' => "fake-consul-cluster", 'events_api' => '/v1/api', 'port' => 8500 } }
+      let(:options){ { 'host' => "fake-consul-cluster", 'protocol' => 'http', 'events_api' => '/v1/api', 'port' => 8500 } }
       it "is valid" do
         subject.run
         expect(subject.validate_options).to eq(true)
@@ -42,7 +42,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
     end
 
     context "when we omit the enpoint and port" do
-      let(:options){ {'host' => 'fake-consul-cluster'} }
+      let(:options){ {'host' => 'fake-consul-cluster', 'protocol' => 'https', 'port' => 8500} }
       it "is valid" do
         subject.run
         expect(subject.validate_options).to eq(true)
@@ -64,7 +64,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
     end
 
     context "with valid options" do
-      let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true} }
+      let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'protocol' => 'http', 'port' => 8500} }
       it "should successully hand the event off to http forwarder" do
         subject.run
         expect(subject).to receive(:send_http_put_request).with(uri, request)
@@ -75,7 +75,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
   end
 
   describe "sending events to consul" do
-    let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test'} }
+    let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
     it "should forward events when events are enabled"  do
       subject.run
       expect(subject).to receive(:send_http_put_request).with(uri, request)
@@ -84,7 +84,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
   end
 
   describe "sending ttl requests to consul" do
-    let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'namespace' => 'test_', 'ttl_note' => 'test'} }
+    let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
 
 
     it "should send a put request to the register endpoint the first time an event is encountered" do
@@ -180,7 +180,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
     end
 
     describe "when events are also enabled" do
-      let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test'} }
+      let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
 
       it "should send ttl and event requests in a single loop" do
         subject.run
