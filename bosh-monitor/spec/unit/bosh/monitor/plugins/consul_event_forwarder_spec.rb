@@ -4,8 +4,9 @@ describe Bhm::Plugins::ConsulEventForwarder do
 
   subject{ described_class.new(options)  }
   let(:heartbeat){ make_heartbeat(timestamp: 1320196099) }
-  let(:uri){ URI.parse("http://fake-consul-cluster:8500/v1/event/fire/mysql_node_heartbeat?") }
-  let(:request){ { :body => heartbeat.to_json } }
+  let(:alert){ make_alert }
+  let(:alert_uri){ URI.parse("http://fake-consul-cluster:8500/v1/event/fire/test_alert_alert?") }
+  let(:event_request) {{ :body => alert.to_json }}
   let(:ttl_request){ { :body => heartbeat.to_json } }
   let(:heartbeat_name){ "test_" + heartbeat.job}
   let(:namespace){ "test/" }
@@ -52,40 +53,39 @@ describe Bhm::Plugins::ConsulEventForwarder do
   end
 
 
-  describe "forwarding event messages to consul" do
+  describe "forwarding alert messages to consul" do
 
     context "without valid options" do
       let(:options){ { 'host' => nil } }
       it "it should not forward events if options are invalid" do
         subject.run
-        expect(subject).to_not receive(:send_http_put_request).with(uri, request)
-        subject.process(heartbeat)
+        expect(subject).to_not receive(:send_http_put_request).with(alert_uri, event_request)
+        subject.process(alert)
       end
     end
 
     context "with valid options" do
       let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'protocol' => 'http', 'port' => 8500} }
-      it "should successully hand the event off to http forwarder" do
+      it "should successully hand the alert off to http forwarder" do
         subject.run
-        expect(subject).to receive(:send_http_put_request).with(uri, request)
-        subject.process(heartbeat)
+        expect(subject).to receive(:send_http_put_request).with(alert_uri, event_request)
+        subject.process(alert)
       end
     end
 
   end
 
-  describe "sending events to consul" do
-    let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
+  describe "sending alerts to consul" do
+    let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'namespace' => 'test_', 'protocol' => 'http', 'port' => 8500} }
     it "should forward events when events are enabled"  do
       subject.run
-      expect(subject).to receive(:send_http_put_request).with(uri, request)
-      subject.process(heartbeat)
+      expect(subject).to receive(:send_http_put_request).with(alert_uri, event_request)
+      subject.process(alert)
     end
   end
 
-  describe "sending ttl requests to consul" do
+  describe "sending heartbeats as ttl requests to consul" do
     let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
-
 
     it "should send a put request to the register endpoint the first time an event is encountered" do
       subject.run
@@ -174,22 +174,22 @@ describe Bhm::Plugins::ConsulEventForwarder do
           subject.process(heartbeat)
           EM.stop
         end
-        expect(subject).to_not receive(:send_http_put_request).with(uri, request)
-        subject.process(heartbeat)
+        expect(subject).to_not receive(:send_http_put_request).with(alert_uri, event_request)
+        subject.process(alert)
       end
     end
 
     describe "when events are also enabled" do
       let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
 
-      it "should send ttl and event requests in a single loop" do
+      it "should not send ttl and event requests for same event" do
         subject.run
 
         EM.run do
           subject.process(heartbeat)
           EM.stop
         end
-        expect(subject).to receive(:send_http_put_request).with(uri, request)
+        expect(subject).to_not receive(:send_http_put_request).with(alert_uri, event_request)
         expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, ttl_request)
         subject.process(heartbeat)
       end

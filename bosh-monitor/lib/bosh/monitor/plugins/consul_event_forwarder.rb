@@ -53,21 +53,13 @@ module Bosh::Monitor
         URI.parse("#{@protocol}://#{@host}:#{@port}#{path}?#{@params}")
       end
 
+      #heartbeats get forwarded as ttl checks and alerts get forwarded as events
       def forward_event(event)
-        notify_consul(event, :event)  if @use_events
-
-        if event_unregistered?(event)
-          notify_consul(event, :register, registration_payload(event))
-        elsif @use_ttl
-          notify_consul(event, :ttl)
+        if event.is_a?(Bosh::Monitor::Events::Alert) && @use_events
+          notify_consul(event, :event)
+        elsif event.is_a?(Bosh::Monitor::Events::Heartbeat) && @use_ttl
+          event_unregistered?(event) ? notify_consul(event, :register, registration_payload(event)) : notify_consul(event, :ttl)
         end
-      end
-
-      #currently an event sent to consul has a maximum payload size of 512 bytes
-      #This poses and interesting problem, How do we slim down an event without damaging the structure
-      #of the well formed json?
-      def fix_body_size(body)
-
       end
 
       def get_path_for_note_type(event, note_type)
