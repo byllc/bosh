@@ -132,6 +132,8 @@ module Bosh::Monitor
         body = event.to_hash
         if event.is_a?(Bosh::Monitor::Events::Heartbeat)
           vitals = body[:vitals]
+          #currently assuming the event hash details are always put together in the same order
+          #this should yield consistent results from the values method
           {
             :agent  => body[:agent_id],
             :name   => "#{body[:job]}/#{body[:index]}",
