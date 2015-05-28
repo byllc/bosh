@@ -112,7 +112,7 @@ module Bosh::Monitor
       # note_type: the type of notice we are sending (:event, :ttl, :register)
       # message:   an optional body for the message, event.json is used by default
       def notify_consul(event, note_type, message=nil)
-        body    = message.nil? ? right_sized_body_for_consul(event.to_json) : message.to_json
+        body    = message.nil? ? right_sized_body_for_consul(event).to_json : message.to_json
         uri     = consul_uri(event, note_type)
 
         request = { :body => body }
@@ -122,16 +122,31 @@ module Bosh::Monitor
         #if a registration request returns without error we log it
         #we don't want to send extra registrations
         @checklist << event.job if note_type == :register
-      #rescue => e
-        #logger.error("Could not forward event to Consul Cluster @#{@host}: #{e.inspect}")
+      rescue => e
+        logger.error("Could not forward event to Consul Cluster @#{@host}: #{e.inspect}")
       end
 
-      #consul limits event payload to < 512 bytes, unfortunately we have to do some pruning if this limit is reached
+      #consul limits event payload to < 512 bytes, unfortunately we have to do some pruning so this limit is not as likely to be reached
       #this is suboptimal but otherwise the event post will fail, and how do we decide what data isn't important?
-      def right_sized_body_for_consul(body)
-        right_sized_body = if body.to_s.bytesize > CONSUL_MAX_EVENT_BYTESIZE
-           body['vitals'] = {}
-           body['source'] = {}
+      def right_sized_body_for_consul(event)
+        body = event.to_hash
+        if event.is_a?(Bosh::Monitor::Events::Heartbeat)
+          vitals = body[:vitals]
+          {
+            :agent  => body[:agent_id],
+            :name   => "#{body[:job]}/#{body[:index]}",
+            :state  => "#{body[:job_state]}",
+            :data   => {
+                :cpu => vitals['cpu'].values,
+                :dsk => {
+                  :eph => vitals['disk']['ephemeral'].values,
+                  :sys => vitals['disk']['system'].values,
+                },
+                :ld  => vitals['load'],
+                :mem => vitals['mem'].values,
+                :swp => vitals['swap'].values
+            }
+          }
         else
           body
         end

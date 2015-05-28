@@ -8,7 +8,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
   let(:alert_uri){ URI.parse("http://fake-consul-cluster:8500/v1/event/fire/#{namespace}test_alert?") }
   let(:heartbeat_alert_uri){ URI.parse("http://fake-consul-cluster:8500/v1/event/fire/#{heartbeat_name}?") }
   let(:event_request) {{ :body => alert.to_json }}
-  let(:ttl_request){ { :body => heartbeat.to_json } }
+  let(:heartbeat_request){ { :body => simplified_heartbeat.to_json } }
   let(:heartbeat_name){ namespace + heartbeat.job }
   let(:namespace){ "ns_" }
   let(:new_port){ "9500" }
@@ -24,6 +24,22 @@ describe Bhm::Plugins::ConsulEventForwarder do
   let(:register_uri_with_params){ URI.parse("http://fake-consul-cluster:8500/v1/agent/check/register?#{new_params}")}
   let(:register_request){ { :body => { "name" => "#{namespace}mysql_node", "notes" => "test", "ttl" => "120s"}.to_json } }
   let(:register_request_with_namespace){ { :body => { "name" => "#{namespace}mysql_node", "notes" => "test", "ttl" => "120s"}.to_json } }
+
+  #we send a simplified version of a heartbeat to consul when sending as an event because consul has a 512byte limit for events
+  let(:simplified_heartbeat){ {
+    :agent => "deadbeef",
+    :name => "mysql_node/0",
+    :state => "running",
+    :data => { "cpu" => [22.3,23.4,33.22],
+               "dsk" => {
+                 "eph" => [33,74],
+                 "sys" => [74,68]},
+                 "ld"  => [0.2,0.3,0.6],
+                 "mem" => [32.2,512031],
+                 "swp" => [32.6,231312]
+              }
+     }
+  }
 
 
   describe "validating the options" do
@@ -126,7 +142,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
       EM.run do
         subject.run
         subject.process(heartbeat)
-        expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, ttl_request)
+        expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, heartbeat_request)
         subject.process(heartbeat)
         EM.stop
       end
@@ -137,7 +153,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
       EM.run do
         subject.run
         subject.process(heartbeat)
-        expect(subject).to receive(:send_http_put_request).with(ttl_fail_uri, ttl_request)
+        expect(subject).to receive(:send_http_put_request).with(ttl_fail_uri, heartbeat_request)
         subject.process(heartbeat)
         EM.stop
       end
@@ -149,7 +165,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
       EM.run do
         subject.run
         subject.process(heartbeat)
-        expect(subject).to receive(:send_http_put_request).with(ttl_fail_uri, ttl_request)
+        expect(subject).to receive(:send_http_put_request).with(ttl_fail_uri, heartbeat_request)
         subject.process(heartbeat)
         EM.stop
       end
@@ -191,7 +207,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
           EM.stop
         end
         expect(subject).to_not receive(:send_http_put_request).with(alert_uri, event_request)
-        expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, ttl_request)
+        expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, heartbeat_request)
         subject.process(heartbeat)
       end
 
@@ -204,8 +220,8 @@ describe Bhm::Plugins::ConsulEventForwarder do
             subject.process(heartbeat)
             EM.stop
           end
-          expect(subject).to receive(:send_http_put_request).with(heartbeat_alert_uri, ttl_request)
-          expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, ttl_request)
+          expect(subject).to receive(:send_http_put_request).with(heartbeat_alert_uri, heartbeat_request)
+          expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, heartbeat_request)
           subject.process(heartbeat)
         end
       end
