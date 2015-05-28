@@ -5,23 +5,24 @@ describe Bhm::Plugins::ConsulEventForwarder do
   subject{ described_class.new(options)  }
   let(:heartbeat){ make_heartbeat(timestamp: 1320196099) }
   let(:alert){ make_alert }
-  let(:alert_uri){ URI.parse("http://fake-consul-cluster:8500/v1/event/fire/test_alert_alert?") }
+  let(:alert_uri){ URI.parse("http://fake-consul-cluster:8500/v1/event/fire/#{namespace}test_alert?") }
+  let(:heartbeat_alert_uri){ URI.parse("http://fake-consul-cluster:8500/v1/event/fire/#{heartbeat_name}?") }
   let(:event_request) {{ :body => alert.to_json }}
   let(:ttl_request){ { :body => heartbeat.to_json } }
-  let(:heartbeat_name){ "test_" + heartbeat.job}
-  let(:namespace){ "test/" }
+  let(:heartbeat_name){ namespace + heartbeat.job }
+  let(:namespace){ "ns_" }
   let(:new_port){ "9500" }
   let(:new_protocol){ "https" }
   let(:new_params){ "acl_token=testtoken" }
-  let(:heartbeat_name_with_namespace){ "test/test_" + heartbeat.job}
-  let(:ttl_pass_uri){ URI.parse("http://fake-consul-cluster:8500/v1/agent/check/pass/#{heartbeat_name}?") }
-  let(:ttl_fail_uri){ URI.parse("http://fake-consul-cluster:8500/v1/agent/check/fail/#{heartbeat_name}?") }
-  let(:ttl_warn_uri){ URI.parse("http://fake-consul-cluster:8500/v1/agent/check/warn/#{heartbeat_name}?") }
-  let(:register_uri){ URI.parse("http://fake-consul-cluster:8500/v1/agent/check/register?") }
+  let(:agent_base_url){ "http://fake-consul-cluster:8500/v1/agent/check/" }
+  let(:ttl_pass_uri){ URI.parse( agent_base_url + "pass/#{heartbeat_name}?") }
+  let(:ttl_fail_uri){ URI.parse( agent_base_url + "fail/#{heartbeat_name}?") }
+  let(:ttl_warn_uri){ URI.parse( agent_base_url + "warn/#{heartbeat_name}?") }
+  let(:register_uri){ URI.parse( agent_base_url + "register?") }
   let(:register_uri_with_port){ URI.parse("http://fake-consul-cluster:#{new_port}/v1/agent/check/register?")}
   let(:register_uri_with_protocol){ URI.parse("#{new_protocol}://fake-consul-cluster:8500/v1/agent/check/register?")}
   let(:register_uri_with_params){ URI.parse("http://fake-consul-cluster:8500/v1/agent/check/register?#{new_params}")}
-  let(:register_request){ { :body => { "name" => "test_mysql_node", "notes" => "test", "ttl" => "120s"}.to_json } }
+  let(:register_request){ { :body => { "name" => "#{namespace}mysql_node", "notes" => "test", "ttl" => "120s"}.to_json } }
   let(:register_request_with_namespace){ { :body => { "name" => "#{namespace}mysql_node", "notes" => "test", "ttl" => "120s"}.to_json } }
 
 
@@ -65,7 +66,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
     end
 
     context "with valid options" do
-      let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'protocol' => 'http', 'port' => 8500} }
+      let(:options){ { 'host' => 'fake-consul-cluster', 'namespace' => namespace, 'events' => true, 'protocol' => 'http', 'port' => 8500} }
       it "should successully hand the alert off to http forwarder" do
         subject.run
         expect(subject).to receive(:send_http_put_request).with(alert_uri, event_request)
@@ -76,7 +77,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
   end
 
   describe "sending alerts to consul" do
-    let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'namespace' => 'test_', 'protocol' => 'http', 'port' => 8500} }
+    let(:options){ { 'host' => 'fake-consul-cluster', 'events' => true, 'namespace' => namespace, 'protocol' => 'http', 'port' => 8500} }
     it "should forward events when events are enabled"  do
       subject.run
       expect(subject).to receive(:send_http_put_request).with(alert_uri, event_request)
@@ -85,7 +86,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
   end
 
   describe "sending heartbeats as ttl requests to consul" do
-    let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
+    let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'namespace' => namespace, 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
 
     it "should send a put request to the register endpoint the first time an event is encountered" do
       subject.run
@@ -94,7 +95,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
     end
 
     it "should properly send namespaced job name when namespace used" do
-      options.merge!({'namespace' => "test/" })
+      options.merge!({'namespace' => namespace })
       subject.run
       expect(subject).to receive(:send_http_put_request).with(register_uri, register_request_with_namespace)
       subject.process(heartbeat)
@@ -180,7 +181,7 @@ describe Bhm::Plugins::ConsulEventForwarder do
     end
 
     describe "when events are also enabled" do
-      let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'events' => true, 'namespace' => 'test_', 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
+      let(:options){ { 'host' => 'fake-consul-cluster', 'ttl' => "120s", 'events' => true, 'namespace' => namespace, 'ttl_note' => 'test', 'protocol' => 'http', 'port' => 8500} }
 
       it "should not send ttl and event requests for same event" do
         subject.run
@@ -192,6 +193,21 @@ describe Bhm::Plugins::ConsulEventForwarder do
         expect(subject).to_not receive(:send_http_put_request).with(alert_uri, event_request)
         expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, ttl_request)
         subject.process(heartbeat)
+      end
+
+      describe "When send heartbeats_as_alerts is enabled" do
+        it "should send both ttl and event request in the same loop " do
+          options.merge!({'heartbeats_as_alerts' => true})
+          subject.run
+
+          EM.run do
+            subject.process(heartbeat)
+            EM.stop
+          end
+          expect(subject).to receive(:send_http_put_request).with(heartbeat_alert_uri, ttl_request)
+          expect(subject).to receive(:send_http_put_request).with(ttl_pass_uri, ttl_request)
+          subject.process(heartbeat)
+        end
       end
     end
   end

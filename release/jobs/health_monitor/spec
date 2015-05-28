@@ -207,3 +207,6 @@ properties:
   hm.consul_event_forwarder.events:
     description: Whether or not to use the events api
     default: false
+  hm.consul_event_forwarder.heartbeats_as_alerts
+    description: Should we treat all heartbeats as alerts as well?
+    default: false
